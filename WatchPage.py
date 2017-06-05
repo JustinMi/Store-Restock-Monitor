@@ -3,7 +3,10 @@
 import time
 import requests
 import smtplib 
+import json
 from timeit import default_timer as timer 
+
+JSON_FILE = 'WebsiteStates.json'
 
 start = timer()
 
@@ -32,13 +35,13 @@ def send_email(user, pwd, recipient, subject, body):
 
 def main():
 
-
+	# with statement closes the request session automatically
 	with requests.Session() as s:
-		url 					= "http://www.supremenewyork.com/shop"
+		url 					= "https://2127301090.com/"
 		time_between_checks 	= 120 # seconds
-		user 					= "justinmi16@mittymonarch.com"
-		pwd 					= "legomaniac"
-		recipient 				= "justin.mi@berkeley.edu"
+		user 					= ""
+		pwd 					= ""
+		recipient 				= ""
 		subject 				= "SITE UPDATED"
 		body 					= "CHANGE AT " + str(url)
 
@@ -48,32 +51,23 @@ def main():
 
 		page2 = s.get(url) # "new page" that will be compared against "old page"
 
-		if page1.content == page2.content:
-			end = timer()
-			if end - start >= 60:
-				time_minutes = (end - start) / 60
-				print("[-] No change detected @ " + str(url))
-				print("Elapsed time: " + str(time_minutes) + " minutes")
-			else:
-				print("[-] No change detected @ " + str(url))
-				print("[-] Elapsed time: " + str(end - start) + " seconds")
-		else:
-			print(page1.content)
-			print(page2.content)
-			end = timer()
-			if end - start >= 60:
-				time_minutes = (end - start) / 60
-				print("[+] Change detected @ " + str(url))
-				print("[+] Elapsed time: " + str(time_minutes) + " minutes")
-			else:
-				print("[+] Change detected @ " + str(url))
-				print("[+] Elapsed time: " + str(end - start) + " seconds")
+		end = timer()
 
+		if page1.content == page2.content:
+			print("[-] No change detected @ " + str(url))
+		else:
+			print("[+] Change detected @ " + str(url))
+
+			with open(JSON_FILE, 'w') as savefile:
+				json.dump([page1, page2], savefile, indent=4, separators=(',', ':'))
+				
 			send_email(user, pwd, recipient, subject, body)
+
+		print("Elapsed time: " + str((end - start) / 60) + " minutes")
 
 		page2 = None
 
-		main()
+		main() # continues looping forever
 
 if __name__ == "__main__":
 	main()
